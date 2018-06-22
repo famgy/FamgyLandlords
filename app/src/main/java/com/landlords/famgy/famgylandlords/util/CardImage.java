@@ -2,9 +2,9 @@ package com.landlords.famgy.famgylandlords.util;
 
 import com.landlords.famgy.famgylandlords.R;
 
-class CardImage
+public class CardImage
 {
-	int[][] cardImages = {
+	public static int[][] cardImages = {
 			{R.drawable.c020, R.drawable.c021, R.drawable.c022, R.drawable.c023},
 			{R.drawable.c030, R.drawable.c031, R.drawable.c032, R.drawable.c033},
 			{R.drawable.c040, R.drawable.c041, R.drawable.c042, R.drawable.c043},

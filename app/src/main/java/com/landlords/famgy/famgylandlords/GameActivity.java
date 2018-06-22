@@ -18,8 +18,10 @@ public class GameActivity extends AppCompatActivity
     public static int SCREEN_WIDTH;
     public static int SCREEN_HEIGHT;
     private Game game;
-    public Handler handlerF;
-    public Handler handlerC;
+    public static Handler handlerF;
+    public static Handler handlerC;
+    boolean bCThreadOk = false;
+    boolean bVThreadOk = false;
 
     Runnable sendable = new Runnable() {
         @Override
@@ -30,7 +32,7 @@ public class GameActivity extends AppCompatActivity
                 @Override
                 public void handleMessage(Message msg) {
                     String cmd = (String) msg.obj;
-                    Log.i("=== : ", cmd);
+                    Log.i("=== HandlerC ", "received : " + cmd);
 
                     gameEngine();
                 }
@@ -51,24 +53,37 @@ public class GameActivity extends AppCompatActivity
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
         intView();
-
-        GameView gameView = new GameView(this);
-        setContentView(gameView);
-
         game = Game.getGame();
 
         handlerF = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 String cmd = (String) msg.obj;
-                Log.i("=== : ", cmd);
-                if (cmd.equals("CThread ok")) {
-                    BeatHandler.sendMessage(handlerC, "Start game");
+                Log.i("=== HandlerF ", "received : " + cmd);
+
+                switch (cmd)
+                {
+                    case "CThread ok":
+                        bCThreadOk = true;
+                        if (bVThreadOk == true) {
+                            BeatHandler.sendMessage(handlerC, "Game start");
+                        }
+                        break;
+                    case "VThread ok":
+                        bVThreadOk = true;
+                        if (bCThreadOk == true) {
+                            BeatHandler.sendMessage(handlerC, "Game start");
+                        }
+                    default:
+                        break;
                 }
             }
         };
 
         new Thread(sendable).start();
+
+        GameView gameView = new GameView(this, handlerF);
+        setContentView(gameView);
     }
 
     private void intView() {
@@ -82,13 +97,13 @@ public class GameActivity extends AppCompatActivity
         switch (game.status)
         {
             case NotStart:
-                game.startGame(handlerC);
+                game.startGame();
                 break;
             case GetLandlord:
                 game.callLandlord();
                 break;
             case SetLandlord:
-
+                game.setLandlord();
                 break;
             default:
                 break;
