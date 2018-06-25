@@ -1,17 +1,62 @@
 package com.landlords.famgy.famgylandlords;
 
+import java.util.ArrayList;
+
 public class Player
 {
     private int No;
     private Game game;
     private int callScore = 0;//叫地主的分数
     boolean[] handCard;//当前手牌，true表示有，false表示没有; 用0到53，从小到大排，0为方块三，53为大王
+    ArrayList<MyHandCard> myHandCards;
+    ArrayList<SelectCard> selectCards;
 
     Player (int No, Game game)
     {
         handCard = game.cardHeap.getHandCard (No);
         this.No = No;
         this.game = game;
+
+        myHandCards = new ArrayList<>();
+        updateMyHandCardsInfo();
+
+        selectCards = new ArrayList<>();
+    }
+
+    void updateMyHandCardsInfo() {
+        int offset = 0;
+        MyHandCard myHandCard;
+
+        if (No != 0) {
+            return;
+        }
+
+        if (!myHandCards.isEmpty()) {
+            myHandCards.clear();
+        }
+
+        for (int i = 53; i >= 0; i--)
+        {
+            if (handCard[i])
+            {
+                myHandCard = new MyHandCard();
+                myHandCard.cardNo = i;
+                myHandCard.retx = (100 + offset * 25) * GameActivity.SCREEN_WIDTH / 800;
+                myHandCard.rety = 350 * GameActivity.SCREEN_HEIGHT / 480;
+                myHandCard.rety_discard = 330 * GameActivity.SCREEN_HEIGHT / 480;
+                myHandCard.bSelected = false;
+
+                offset++;
+
+                myHandCards.add(myHandCard);
+            }
+        }
+    }
+
+    //获取编号
+    int getNo ()
+    {
+        return No;
     }
 
     //更新手牌，用于加入地主牌

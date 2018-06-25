@@ -4,6 +4,7 @@ import android.os.Handler;
 
 import com.landlords.famgy.famgylandlords.util.BeatHandler;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class Game {
@@ -14,6 +15,11 @@ public class Game {
     int maxScore = 0; //当前叫地主分数最高的玩家分数
     int callBegin; //当前访问的下标
     Card cardHeap; //发牌堆
+    int[] lord_show = new int[3];
+    Boolean my_world = false;  //判断是否是自己任意出牌局；
+    Player curPlayer; //当前出牌玩家
+    Player lastPlayer; //最后出牌方
+    Player landlord; //地主
 
     //游戏进度状态
     enum Status
@@ -28,6 +34,8 @@ public class Game {
 
     private Game() {
         status = Status.NotStart;
+
+        lord_show[0] = -1;
     }
 
     static Game getGame() {
@@ -36,6 +44,8 @@ public class Game {
 
     void startGame ()
     {
+        curPlayer = null;
+        lastPlayer = null;
         //发牌函数
         cardHeap = Card.getCard (); //洗牌
         //初始化角色
@@ -63,9 +73,21 @@ public class Game {
             }
         }
 
+        //地主先出牌
+        landlord = players[0];
+        curPlayer = landlord;
+        lastPlayer = landlord;
+
         //对应玩家加入地主牌
-        int[] landlordCard = cardHeap.setLandlord (0);
-        players[0].setHandCard ();
+        int[] landlordCard = cardHeap.setLandlord (landlord.getNo());
+        landlord.setHandCard ();
+        if (landlord.getNo() == 0) {
+            players[0].updateMyHandCardsInfo();
+        }
+
+        if (lord_show[0] == -1) {
+            lord_show = Arrays.copyOf(landlordCard, landlordCard.length);
+        }
 
         status = Status.SetLandlord;
 
@@ -73,8 +95,20 @@ public class Game {
     }
 
     void setLandlord() {
-        BeatHandler.sendMessage(GameView.handlerV, "Set landlord ok");
-
         status = Status.Discard;
+
+        //如果是真人玩家
+        if (curPlayer == players[0])
+        {
+            my_world = (curPlayer.getNo () == lastPlayer.getNo ());
+        }
+
+        BeatHandler.sendMessage(GameView.handlerV, "Discard");
+    }
+
+    //出牌
+    void discard ()
+    {
+        BeatHandler.sendMessage(GameView.handlerV, "Discard send");
     }
 }

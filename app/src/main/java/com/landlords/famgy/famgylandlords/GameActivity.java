@@ -32,7 +32,7 @@ public class GameActivity extends AppCompatActivity
                 @Override
                 public void handleMessage(Message msg) {
                     String cmd = (String) msg.obj;
-                    Log.i("=== HandlerC ", "received : " + cmd);
+                    Log.i("=== HandlerC ", "received : " + cmd + " , curStatus :" + game.status);
 
                     gameEngine();
                 }
@@ -59,7 +59,7 @@ public class GameActivity extends AppCompatActivity
             @Override
             public void handleMessage(Message msg) {
                 String cmd = (String) msg.obj;
-                Log.i("=== HandlerF ", "received : " + cmd);
+                Log.i("=== HandlerF ", "received : " + cmd+ " , curStatus :" + game.status);
 
                 switch (cmd)
                 {
@@ -105,6 +105,8 @@ public class GameActivity extends AppCompatActivity
             case SetLandlord:
                 game.setLandlord();
                 break;
+            case Discard:
+                game.discard();
             default:
                 break;
         }

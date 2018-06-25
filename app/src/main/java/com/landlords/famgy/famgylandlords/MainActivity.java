@@ -4,8 +4,10 @@ import android.content.pm.ActivityInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.view.KeyEvent;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,6 +45,13 @@ public class MainActivity extends AppCompatActivity {
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         SCREEN_WIDTH = displayMetrics.widthPixels;
         SCREEN_HEIGHT = displayMetrics.heightPixels;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Log.i("MainActivity", "App onKeyDown, to exit.");
+        System.exit(0);
+        return super.onKeyDown(keyCode, event);
     }
 
     /**
