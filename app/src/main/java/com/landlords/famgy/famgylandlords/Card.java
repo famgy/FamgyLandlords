@@ -76,7 +76,7 @@ class Card
 	}
 
 	//分配地主牌
-	int[] setLandlord (int No)
+	int[] setLandlordCards (int No)
 	{
 		if (!(No > -1 && No < 3))
 			throw new AssertionError();

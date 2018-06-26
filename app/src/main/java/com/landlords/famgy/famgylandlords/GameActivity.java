@@ -38,6 +38,7 @@ public class GameActivity extends AppCompatActivity
                 }
             };
 
+            Log.i("=== handlerF ", "handlerC send : " + "CThread ok");
             BeatHandler.sendMessage(handlerF, "CThread ok");
 
             Looper.loop();
@@ -66,12 +67,14 @@ public class GameActivity extends AppCompatActivity
                     case "CThread ok":
                         bCThreadOk = true;
                         if (bVThreadOk == true) {
+                            Log.i("=== handlerC ", "handlerF send : " + "Game start");
                             BeatHandler.sendMessage(handlerC, "Game start");
                         }
                         break;
                     case "VThread ok":
                         bVThreadOk = true;
                         if (bCThreadOk == true) {
+                            Log.i("=== handlerC ", "handlerF send : " + "Game start");
                             BeatHandler.sendMessage(handlerC, "Game start");
                         }
                     default:
@@ -105,8 +108,15 @@ public class GameActivity extends AppCompatActivity
             case SetLandlord:
                 game.setLandlord();
                 break;
-            case Discard:
-                game.discard();
+            case DiscardSelect:
+                game.discardSelect();
+                break;
+            case DiscardSend:
+                game.discardSend();
+                break;
+            case Wait:
+                game.discardwait();
+                break;
             default:
                 break;
         }

@@ -1,9 +1,11 @@
 package com.landlords.famgy.famgylandlords;
 
 import android.os.Handler;
+import android.util.Log;
 
 import com.landlords.famgy.famgylandlords.util.BeatHandler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -20,6 +22,7 @@ public class Game {
     Player curPlayer; //当前出牌玩家
     Player lastPlayer; //最后出牌方
     Player landlord; //地主
+    ArrayList<DeskCard> deskCards;
 
     //游戏进度状态
     enum Status
@@ -27,13 +30,16 @@ public class Game {
         NotStart, //游戏未开始
         GetLandlord, //叫地主阶段
         SetLandlord, //发地主牌阶段
-        Discard, //出牌阶段
+        DiscardSelect, //选牌
+        DiscardSend, //出牌
         Wait, //完成一局后等待选择
         GameOver //游戏结束
     }
 
     private Game() {
         status = Status.NotStart;
+
+        deskCards = new ArrayList<>();
 
         lord_show[0] = -1;
     }
@@ -55,6 +61,7 @@ public class Game {
                             new Player (2, this)};
         status = Status.GetLandlord;
 
+        Log.i("=== handlerV ", "startGame send : " + "Game start ok");
         BeatHandler.sendMessage(GameView.handlerV, "Game start ok");
     }
 
@@ -79,7 +86,7 @@ public class Game {
         lastPlayer = landlord;
 
         //对应玩家加入地主牌
-        int[] landlordCard = cardHeap.setLandlord (landlord.getNo());
+        int[] landlordCard = cardHeap.setLandlordCards (landlord.getNo());
         landlord.setHandCard ();
         if (landlord.getNo() == 0) {
             players[0].updateMyHandCardsInfo();
@@ -91,11 +98,12 @@ public class Game {
 
         status = Status.SetLandlord;
 
+        Log.i("=== callLandlord ", "callLandlord send : " + "Set landlord");
         BeatHandler.sendMessage(GameView.handlerV, "Set landlord");
     }
 
     void setLandlord() {
-        status = Status.Discard;
+        status = Status.DiscardSelect;
 
         //如果是真人玩家
         if (curPlayer == players[0])
@@ -103,12 +111,46 @@ public class Game {
             my_world = (curPlayer.getNo () == lastPlayer.getNo ());
         }
 
-        BeatHandler.sendMessage(GameView.handlerV, "Discard");
+        Log.i("=== setLandlord ", "setLandlord send : " + "Discard select");
+        BeatHandler.sendMessage(GameView.handlerV, "Discard select");
     }
 
-    //出牌
-    void discard ()
+    void discardSelect ()
     {
-        BeatHandler.sendMessage(GameView.handlerV, "Discard send");
+        status = Status.DiscardSend;
+
+        Log.i("=== discardSelect ", "discard send : " + "Discard send");
+        BeatHandler.sendMessage(GameView.handlerV, "Discard send" + " , curStatus : " + status);
+    }
+
+    //恢复出牌状态
+    void discardSend ()
+    {
+        status = Status.Wait;
+
+        curPlayer = players[1];
+
+        Log.i("=== discardSend ", "discard wait : " + "Discard wait");
+        BeatHandler.sendMessage(GameView.handlerV, "Discard wait" + " , curStatus : " + status);
+    }
+
+    //等待状态转向下一位玩家出牌
+    void discardwait ()
+    {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(3000);
+
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Log.i("=== discardSend ", "discard wait : " + "Discard wait");
+        BeatHandler.sendMessage(GameView.handlerV, "Discard wait" + " , curStatus : " + status);
     }
 }

@@ -68,10 +68,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     private Bitmap bitmaps_cards_d[];
     private float cards_d_w;
     private float cards_d_h;
+    private Bitmap bitmap_pass;
     private Bitmap bitmap_discard;
     private float discard_w;
     private float discard_h;
-    private Bitmap bitmap_pass;
+    private Bitmap bitmap_time;
+    private float time_w;
+    private float time_h;
 
     private Context context;
 
@@ -96,6 +99,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
                 }
             };
 
+            Log.i("=== handlerF ", "handlerV send : " + "VThread ok");
             BeatHandler.sendMessage(GameActivity.handlerF, "VThread ok");
 
             Looper.loop();
@@ -140,6 +144,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         discard_h = 60 * GameActivity.SCREEN_HEIGHT / 480;
         cards_d_w = 40 * GameActivity.SCREEN_WIDTH / 800;
         cards_d_h = 60 * GameActivity.SCREEN_HEIGHT / 480;
+        time_w = 50 * GameActivity.SCREEN_WIDTH / 800;
+        time_h = 50 * GameActivity.SCREEN_HEIGHT / 480;
 
         bitmap_background = BitmapScala.scalamap(BitmapFactory.decodeResource(resources, R.drawable.place), background_w, background_h);
         bitmap_desk = BitmapScala.scalamap(BitmapFactory.decodeResource (resources, R.drawable.desk), desk_w, desk_h);
@@ -158,10 +164,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         bitmap_score32 = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.score32), score_w, score_h);
         bitmap_score33 = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.score33), score_w, score_h);
         bitmap_discard = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.discard1), discard_w, discard_h);
+        bitmap_time = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.time), 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480);
 
         //初始化卡牌
         bitmaps_cards = new Bitmap[54];
         bitmaps_cards_l = new Bitmap[54];
+        bitmaps_cards_d = new Bitmap[54];
         for (int i = 0; i < 54; i++)
         {
             Bitmap bitmap_card = BitmapFactory.decodeResource (resources, cardImage.cardImages[i / 4][i % 4]);
@@ -181,8 +189,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             case SetLandlord:
                 drawLandlord();
                 break;
-            case Discard:
-                drawDiscard();
+            case DiscardSelect:
+                drawDiscardSelect();
+                break;
+            case DiscardSend:
+                drawDiscardSend();
+                break;
+            case Wait:
+                drawDiscardWait();
                 break;
             default:
                 break;
@@ -240,10 +254,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             surfaceHolder.unlockCanvasAndPost(canvas);
         }
 
+        Log.i("=== handlerC ", "drawLandlord send : " + "Set landlord ok");
         BeatHandler.sendMessage(GameActivity.handlerC, "Set landlord ok");
     }
 
-    private void drawDiscard() {
+    private void drawDiscardSelect() {
         Rect src = new Rect();
         Rect des = new Rect();
 
@@ -264,13 +279,104 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             initPokers(canvas);
             draw_card_loard(canvas);
 
-            if (game.select) {
-
-            }
             draw_button_discard(canvas);
+            draw_curr(canvas);
 
             surfaceHolder.unlockCanvasAndPost(canvas);
         }
+    }
+
+    private void drawDiscardSend() {
+        Rect src = new Rect();
+        Rect des = new Rect();
+
+        src.set(0, 0, bitmap_background.getWidth(), bitmap_background.getHeight());
+        des.set(0, 0, GameActivity.SCREEN_WIDTH, GameActivity.SCREEN_HEIGHT);
+
+        Canvas canvas = surfaceHolder.lockCanvas();
+        if (canvas != null) {
+            Paint paint = new Paint();
+
+            canvas.drawBitmap(bitmap_background, src, des, paint);
+            canvas.drawBitmap(bitmap_desk, 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480, null);
+
+            canvas.drawBitmap(bitmap_player1, 10 * GameActivity.SCREEN_WIDTH / 800, 326 * GameActivity.SCREEN_HEIGHT / 480, null);
+            canvas.drawBitmap(bitmap_player2, 10 * GameActivity.SCREEN_WIDTH / 800, 25 * GameActivity.SCREEN_HEIGHT / 480, null);
+            canvas.drawBitmap(bitmap_player3, 672 * GameActivity.SCREEN_WIDTH / 800, 5 * GameActivity.SCREEN_HEIGHT / 480, null);
+
+            ArrayList<SelectCard> selectCards = game.players[0].selectCards;
+            ArrayList<MyHandCard> myHandCards = game.players[0].myHandCards;
+            for (int i = 0; i < selectCards.size(); i++) {
+                for (int j = 0; j < myHandCards.size(); j++) {
+                    if (selectCards.get(i).cardNo == myHandCards.get(j).cardNo) {
+                        myHandCards.remove(j);
+                    }
+                }
+            }
+
+            initPokers(canvas);
+            draw_card_loard(canvas);
+            draw_show_cards(canvas);
+            draw_curr(canvas);
+
+            surfaceHolder.unlockCanvasAndPost(canvas);
+
+            Log.i("=== handlerC ", "drawDiscardSend send : " + "Discard send ok");
+            BeatHandler.sendMessage(GameActivity.handlerC, "Discard send ok");
+        }
+    }
+
+    private void drawDiscardWait() {
+        Rect src = new Rect();
+        Rect des = new Rect();
+
+        src.set(0, 0, bitmap_background.getWidth(), bitmap_background.getHeight());
+        des.set(0, 0, GameActivity.SCREEN_WIDTH, GameActivity.SCREEN_HEIGHT);
+
+        Canvas canvas = surfaceHolder.lockCanvas();
+        if (canvas != null) {
+            Paint paint = new Paint();
+
+            canvas.drawBitmap(bitmap_background, src, des, paint);
+            canvas.drawBitmap(bitmap_desk, 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480, null);
+
+            canvas.drawBitmap(bitmap_player1, 10 * GameActivity.SCREEN_WIDTH / 800, 326 * GameActivity.SCREEN_HEIGHT / 480, null);
+            canvas.drawBitmap(bitmap_player2, 10 * GameActivity.SCREEN_WIDTH / 800, 25 * GameActivity.SCREEN_HEIGHT / 480, null);
+            canvas.drawBitmap(bitmap_player3, 672 * GameActivity.SCREEN_WIDTH / 800, 5 * GameActivity.SCREEN_HEIGHT / 480, null);
+
+            initPokers(canvas);
+            draw_card_loard(canvas);
+            draw_show_cards(canvas);
+            draw_curr(canvas);
+
+            surfaceHolder.unlockCanvasAndPost(canvas);
+
+            Log.i("=== handlerC ", "drawDiscardSend send : " + "Discard send ok");
+            BeatHandler.sendMessage(GameActivity.handlerC, "Discard send ok");
+        }
+    }
+
+    private void draw_curr (Canvas canvas)
+    {
+        //绘制图标给正在打牌玩家
+        int x = 0;
+        int y = 0;
+        if (game.curPlayer.getNo () == 0)
+        {
+            x = 100;
+            y = 300;
+        }
+        else if (game.curPlayer.getNo () == 1)
+        {
+            x = 700;
+            y = 120;
+        }
+        else if (game.curPlayer.getNo () == 2)
+        {
+            x = 100;
+            y = 120;
+        }
+        canvas.drawBitmap (bitmap_time, x * GameActivity.SCREEN_WIDTH / 800, y * GameActivity.SCREEN_HEIGHT / 480, null);
     }
 
     private void initPokers(Canvas canvas) {
@@ -322,6 +428,33 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         canvas.drawBitmap (bitmap_discard, 410 * GameActivity.SCREEN_WIDTH / 800, 260 * GameActivity.SCREEN_HEIGHT / 480, null);
     }
 
+    private void draw_show_cards(Canvas canvas) {
+        ArrayList<SelectCard> selectCards = game.players[0].selectCards;
+
+        if(game.curPlayer == game.players[0])
+        {
+            for (int i = 0; i < selectCards.size(); i++)
+            {
+                SelectCard selectCard = selectCards.get(i);
+
+                DeskCard deskCard = new DeskCard();
+                deskCard.cardNo = selectCard.cardNo;
+                game.deskCards.add(deskCard);
+            }
+
+            selectCards.clear();
+        }
+
+        int n = 0;
+        for (int i = 0; i < game.deskCards.size(); i++)
+        {
+            DeskCard deskCard = game.deskCards.get(i);
+
+            canvas.drawBitmap (bitmaps_cards_d[deskCard.cardNo], (300 + 20 * n) * GameActivity.SCREEN_WIDTH / 800, 250 * GameActivity.SCREEN_HEIGHT / 480, null);
+            n++;
+        }
+    }
+
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         boolean bAction = false;
@@ -347,28 +480,34 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     private boolean playViewDown(float retx, float rety) {
         boolean bAction = false;
 
-        /* 叫3分 */
         if (retx > 530 * GameActivity.SCREEN_WIDTH / 800 &&
             retx < 530 * GameActivity.SCREEN_WIDTH / 800 + score_w &&
             rety > 260 * GameActivity.SCREEN_HEIGHT / 480 &&
-            rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + score_h)
+            rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + score_h &&
+            game.status == Game.Status.GetLandlord)
         {
+            /* 叫3分 */
             bAction = true;
         }
-        else if ((rety > 330 * GameActivity.SCREEN_HEIGHT / 480) && (rety < 330 * GameActivity.SCREEN_HEIGHT / 480 + card_cur_h) && (game.status == Game.Status.Discard))
+        else if ((rety > 330 * GameActivity.SCREEN_HEIGHT / 480) && (rety < 330 * GameActivity.SCREEN_HEIGHT / 480 + card_cur_h))
         {
+            /* 选牌 */
             if (clickHandCard(retx, rety) == true)
             {
+                Log.i("=== handlerV ", "playViewDown send : " + "Discard select");
                 BeatHandler.sendMessage(handlerV, "Discard select");
             }
 
             bAction = false;
         }
-        else if (retx > 410 * GameActivity.SCREEN_WIDTH / 800 && retx < 410 * GameActivity.SCREEN_WIDTH / 800 + discard_w
-                && rety > 260 * GameActivity.SCREEN_HEIGHT / 480 && rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + discard_h
-                && game.status == Game.Status.Discard)
+        else if (retx > 410 * GameActivity.SCREEN_WIDTH / 800 && retx < 410 * GameActivity.SCREEN_WIDTH / 800 + discard_w &&
+                rety > 260 * GameActivity.SCREEN_HEIGHT / 480 && rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + discard_h &&
+                game.status == Game.Status.DiscardSelect)
         {
+            /* 出牌 */
             bitmap_discard = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.discard2), discard_w, discard_h);
+
+            Log.i("=== handlerV ", "playViewDown send : " + "Discard send down");
             BeatHandler.sendMessage(handlerV, "Discard send down");
 
             bAction = true;
@@ -380,24 +519,29 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     private boolean playViewUp(float retx, float rety) {
         boolean bAction = false;
 
-        /* 叫3分 */
         if (retx > 530 * GameActivity.SCREEN_WIDTH / 800 &&
                 retx < 530 * GameActivity.SCREEN_WIDTH / 800 + score_w &&
                 rety > 260 * GameActivity.SCREEN_HEIGHT / 480 &&
-                rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + score_h)
+                rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + score_h&&
+                game.status == Game.Status.GetLandlord)
         {
+            /* 叫3分 */
             bitmap_score31 = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.score32), score_w, score_h);
+
+            Log.i("=== HandlerC ", "playViewUp send : " + "Call landlord ok");
             BeatHandler.sendMessage(GameActivity.handlerC, "Call landlord ok");
 
             bAction = true;
         }
-        else if (retx > 410 * GameActivity.SCREEN_WIDTH / 800 && retx < 410 * GameActivity.SCREEN_WIDTH / 800 + discard_w
-                && rety > 260 * GameActivity.SCREEN_HEIGHT / 480 && rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + discard_h
-                && game.status == Game.Status.Discard)
+        else if (retx > 410 * GameActivity.SCREEN_WIDTH / 800 && retx < 410 * GameActivity.SCREEN_WIDTH / 800 + discard_w &&
+                rety > 260 * GameActivity.SCREEN_HEIGHT / 480 && rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + discard_h &&
+                game.status == Game.Status.DiscardSelect)
         {
+            /* 出牌 */
             bitmap_discard = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.discard1), discard_w, discard_h);
-            BeatHandler.sendMessage(handlerV, "Discard send up");
-            BeatHandler.sendMessage(GameActivity.handlerC, "Discard send up");
+
+            Log.i("=== HandlerC ", "playViewUp send : " + "Discard send up handlerC");
+            BeatHandler.sendMessage(GameActivity.handlerC, "Discard send up handlerC");
         }
         else
         {
@@ -410,55 +554,79 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     boolean clickHandCard(float retx, float rety) {
         ArrayList<MyHandCard> myHandCards = game.players[0].myHandCards;
         ArrayList<SelectCard> selectCards = game.players[0].selectCards;
+        MyHandCard myHandCard = null;
+        boolean bAction = false;
 
-        int i = 0;
-        for (MyHandCard myHandCard : myHandCards) {
-            if (i == myHandCards.size() - 1) {
-                if (retx > myHandCard.retx && retx < myHandCard.retx + discard_w) {
-
+        for (int i = 0; i < myHandCards.size(); i++) {
+            myHandCard = myHandCards.get(i);
+            if (i != myHandCards.size() - 1) {
+                if (retx > myHandCard.retx && retx < myHandCard.retx + 25 * GameActivity.SCREEN_WIDTH / 800) {
                     if (myHandCard.bSelected == true) {
                         myHandCard.rety = 350 * GameActivity.SCREEN_HEIGHT / 480;
                         myHandCard.bSelected = false;
 
-                        SelectCard selectCard = new SelectCard();
-                        selectCard.cardNo = myHandCard.cardNo;
-                        selectCards.remove(selectCard);
+                        removeSelectCardsNode(selectCards, myHandCard.cardNo);
                     } else {
                         myHandCard.rety = 330 * GameActivity.SCREEN_HEIGHT / 480;
                         myHandCard.bSelected = true;
 
                         SelectCard selectCard = new SelectCard();
                         selectCard.cardNo = myHandCard.cardNo;
-                        selectCards.add(selectCard);
+                        sortAddList(selectCards, selectCard);
                     }
 
-                    return true;
+                    bAction = true;
+                }
+            } else {
+                if (retx > myHandCard.retx && retx < myHandCard.retx + discard_w) {
+                    if (myHandCard.bSelected == true) {
+                        myHandCard.rety = 350 * GameActivity.SCREEN_HEIGHT / 480;
+                        myHandCard.bSelected = false;
+
+                        removeSelectCardsNode(selectCards, myHandCard.cardNo);
+                    } else {
+                        myHandCard.rety = 330 * GameActivity.SCREEN_HEIGHT / 480;
+                        myHandCard.bSelected = true;
+
+                        SelectCard selectCard = new SelectCard();
+                        selectCard.cardNo = myHandCard.cardNo;
+                        sortAddList(selectCards, selectCard);
+                    }
+
+                    bAction = true;
                 }
             }
-            else
-            {
-               if (retx > myHandCard.retx && retx < myHandCard.retx + 25 * GameActivity.SCREEN_WIDTH / 800) {
-
-                   if (myHandCard.bSelected == true) {
-                       myHandCard.rety = 350 * GameActivity.SCREEN_HEIGHT / 480;
-                       myHandCard.bSelected = false;
-                   } else {
-                       myHandCard.rety = 330 * GameActivity.SCREEN_HEIGHT / 480;
-                       myHandCard.bSelected = true;
-
-                       SelectCard selectCard = new SelectCard();
-                       selectCard.cardNo = myHandCard.cardNo;
-                       selectCards.add(selectCard);
-                   }
-
-                   return true;
-               }
-            }
-
-            i++;
         }
 
-        return false;
+        return bAction;
+    }
+
+    private void sortAddList(ArrayList<SelectCard> selectCards, SelectCard selectCard) {
+        SelectCard selectCardTmp;
+
+        for (int i = 0; i < selectCards.size(); i++) {
+            selectCardTmp = selectCards.get(i);
+            if (selectCard.cardNo > selectCardTmp.cardNo) {
+                selectCards.add(i, selectCard);
+                return;
+            }
+        }
+
+        selectCards.add(selectCard);
+    }
+
+    private void removeSelectCardsNode(ArrayList<SelectCard> selectCards, int No) {
+        SelectCard selectCard = null;
+
+        for (int i = 0; i < selectCards.size(); i++) {
+            selectCard = selectCards.get(i);
+            if (selectCard.cardNo == No) {
+                selectCards.remove(i);
+                return;
+            }
+        }
+
+        Log.e("GameView", "delListNode not remove one");
     }
 
     @Override
