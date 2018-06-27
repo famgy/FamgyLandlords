@@ -3,6 +3,34 @@ import java.util.Random;
 
 class Card
 {
+	//一组牌的可能类型
+	public enum Type
+	{
+		Unknown (0), //未知
+		Single (1), //单张
+		Double (2), //对子
+		Three (3), //三条
+		SingleSeq (4), //单顺
+		DoubleSeq (5), //双顺
+		ThreeSeq (6), //三顺
+		ThreePlus (7), //三带一（一张或一对）
+		Airplane (8), //飞机
+		FourSeq (9), //四带二（两张或两对）
+		Bomb (10); //炸弹、王炸
+
+		private int value;
+
+		Type (int value)
+		{
+			this.value = value;
+		}
+
+		int getValue ()
+		{
+			return value;
+		}
+	}
+
 	private static Card card = new Card ();
 	private int[] fullCard = new int[54];
 

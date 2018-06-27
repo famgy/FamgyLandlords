@@ -22,7 +22,7 @@ public class Game {
     Player curPlayer; //当前出牌玩家
     Player lastPlayer; //最后出牌方
     Player landlord; //地主
-    ArrayList<DeskCard> deskCards;
+
 
     //游戏进度状态
     enum Status
@@ -39,8 +39,6 @@ public class Game {
     private Game() {
         status = Status.NotStart;
 
-        deskCards = new ArrayList<>();
-
         lord_show[0] = -1;
     }
 
@@ -48,7 +46,7 @@ public class Game {
         return game;
     }
 
-    void startGame ()
+    void startGameProc ()
     {
         curPlayer = null;
         lastPlayer = null;
@@ -66,7 +64,7 @@ public class Game {
     }
 
     //叫地主
-    void callLandlord () {
+    void callLandlordProc () {
         //随机确定开始询问的玩家
         callBegin = new Random(System.currentTimeMillis ()).nextInt (3);
 
@@ -102,7 +100,7 @@ public class Game {
         BeatHandler.sendMessage(GameView.handlerV, "Set landlord");
     }
 
-    void setLandlord() {
+    void setLandlordProc() {
         status = Status.DiscardSelect;
 
         //如果是真人玩家
@@ -115,34 +113,65 @@ public class Game {
         BeatHandler.sendMessage(GameView.handlerV, "Discard select");
     }
 
-    void discardSelect ()
+    void discardSelectProc ()
     {
-        status = Status.DiscardSend;
+        boolean cards_fit = false;
+        Player player = game.players[0];
+
+        cards_fit = analyseSelectCards();
+        if (cards_fit == true) {
+            status = Status.DiscardSend;
+        }
+
+        for (int i = 0; i < player.selectCards.size(); i++)
+        {
+            SelectCard selectCard = player.selectCards.get(i);
+
+            DeskCard deskCard = new DeskCard();
+            deskCard.cardNo = selectCard.cardNo;
+
+            if (i == 0) {
+                deskCard.type = selectCard.type;
+            }
+
+            player.deskCards.add(deskCard);
+
+            removeMyHandCardsNode(player.myHandCards, selectCard.cardNo);
+        }
+
+        player.selectCards.clear();
 
         Log.i("=== discardSelect ", "discard send : " + "Discard send");
         BeatHandler.sendMessage(GameView.handlerV, "Discard send" + " , curStatus : " + status);
     }
 
     //恢复出牌状态
-    void discardSend ()
+    void discardSendProc ()
     {
         status = Status.Wait;
 
-        curPlayer = players[1];
+        lastPlayer = curPlayer;
+
+        if (lastPlayer == players[0]) {
+            curPlayer = players[1];
+        } else if (lastPlayer == players[1]) {
+            curPlayer = players[2];
+        }
 
         Log.i("=== discardSend ", "discard wait : " + "Discard wait");
         BeatHandler.sendMessage(GameView.handlerV, "Discard wait" + " , curStatus : " + status);
     }
 
     //等待状态转向下一位玩家出牌
-    void discardwait ()
+    void discardwaitProc ()
     {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(5000);
 
+                    robotDiscard();
 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -150,7 +179,111 @@ public class Game {
             }
         });
 
-        Log.i("=== discardSend ", "discard wait : " + "Discard wait");
-        BeatHandler.sendMessage(GameView.handlerV, "Discard wait" + " , curStatus : " + status);
+        thread.start();
+
+//        Log.i("=== discardSend ", "discard wait : " + "Discard wait");
+//        BeatHandler.sendMessage(GameView.handlerV, "Discard wait" + " , curStatus : " + status);
+    }
+
+    private void robotDiscard()
+    {
+        status = Status.DiscardSend;
+
+        if (lastPlayer.deskCards.get(0).type == Card.Type.Single)
+        {
+            for (int i = curPlayer.myHandCards.size() - 1; i >= 0; i--) {
+                if (curPlayer.myHandCards.get(i).cardNo / 4 > lastPlayer.deskCards.get(0).cardNo / 4) {
+                    MyHandCard myHandCard = new MyHandCard();
+                    myHandCard.cardNo = curPlayer.myHandCards.get(i).cardNo;
+
+                    DeskCard deskCard = new DeskCard();
+                    deskCard.cardNo = curPlayer.myHandCards.get(i).cardNo;
+                    curPlayer.deskCards.add(deskCard);
+
+                    break;
+                }
+            }
+        }
+
+        Log.i("=== robotDiscard ", "discard send : " + "Discard send");
+        BeatHandler.sendMessage(GameView.handlerV, "Discard send" + " , curStatus : " + status);
+    }
+
+    private boolean analyseSelectCards()
+    {
+        boolean bFitCards = true;
+        ArrayList<SelectCard> selectCards = curPlayer.selectCards;
+
+        if (selectCards.size() == 0)
+        {
+            Log.i("Game", "Please select some cards");
+            bFitCards = false;
+        }
+        else if (selectCards.size() == 1)
+        {
+            selectCards.get(0).type = Card.Type.Single;
+        }
+        else if (selectCards.size() == 2)
+        {
+            if (selectCards.get(0).cardNo > 52 && selectCards.get(1).cardNo > 52)
+            {
+                selectCards.get(0).type = Card.Type.Bomb;
+            } else if (selectCards.get(0).cardNo / 4 == selectCards.get(1).cardNo / 4) {
+                selectCards.get(0).type = Card.Type.Double;
+            } else {
+                bFitCards = false;
+            }
+        }
+
+        return bFitCards;
+    }
+
+    public void sortAddList(ArrayList<SelectCard> selectCards, SelectCard selectCard) {
+        SelectCard selectCardTmp;
+
+        for (int i = 0; i < selectCards.size(); i++) {
+            selectCardTmp = selectCards.get(i);
+            if (selectCard.cardNo > selectCardTmp.cardNo) {
+                selectCards.add(i, selectCard);
+                return;
+            }
+        }
+
+        selectCards.add(selectCard);
+    }
+
+    public void removeSelectCardsNode(ArrayList<SelectCard> selectCards, int No) {
+        SelectCard selectCard = null;
+
+        for (int i = 0; i < selectCards.size(); i++) {
+            selectCard = selectCards.get(i);
+            if (selectCard.cardNo == No) {
+                selectCards.remove(i);
+                return;
+            }
+        }
+
+        Log.e("GameView", "delListNode not remove one");
+    }
+
+    public void removeMyHandCardsNode(ArrayList<MyHandCard> myHandCards, int No) {
+        MyHandCard myHandCard = null;
+
+        for (int i = 0; i < myHandCards.size(); i++) {
+            myHandCard = myHandCards.get(i);
+            if (myHandCard.cardNo == No) {
+                synchronized (myHandCards) {
+                    Log.e("Game", "removeMyHandCardsNode start ...");
+
+                    myHandCards.remove(i);
+
+                    Log.e("Game", "removeMyHandCardsNode end ...");
+                }
+
+                return;
+            }
+        }
+
+        Log.e("GameView", "delListNode not remove one");
     }
 }

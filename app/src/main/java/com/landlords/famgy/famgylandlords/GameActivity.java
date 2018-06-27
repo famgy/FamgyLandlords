@@ -100,22 +100,22 @@ public class GameActivity extends AppCompatActivity
         switch (game.status)
         {
             case NotStart:
-                game.startGame();
+                game.startGameProc();
                 break;
             case GetLandlord:
-                game.callLandlord();
+                game.callLandlordProc();
                 break;
             case SetLandlord:
-                game.setLandlord();
+                game.setLandlordProc();
                 break;
             case DiscardSelect:
-                game.discardSelect();
+                game.discardSelectProc();
                 break;
             case DiscardSend:
-                game.discardSend();
+                game.discardSendProc();
                 break;
             case Wait:
-                game.discardwait();
+                game.discardwaitProc();
                 break;
             default:
                 break;

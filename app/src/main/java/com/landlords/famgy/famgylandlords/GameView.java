@@ -95,7 +95,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
                     String cmd = (String) msg.obj;
                     Log.i("=== HandlerV ", "received : " + cmd + " , curStatus :" + game.status);
 
-                    draw();
+                    Canvas canvas = surfaceHolder.lockCanvas ();
+                    if (canvas != null)
+                        synchronized (this)
+                        {
+                            drawGame(canvas);
+                            //Thread.sleep (30);
+                            surfaceHolder.unlockCanvasAndPost (canvas);
+                        }
                 }
             };
 
@@ -180,180 +187,89 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         }
     }
 
-    private void draw() {
+    private void drawGame(Canvas canvas) {
+        Rect src = new Rect();
+        Rect des = new Rect();
+
+        src.set(0, 0, bitmap_background.getWidth(), bitmap_background.getHeight());
+        des.set(0, 0, GameActivity.SCREEN_WIDTH, GameActivity.SCREEN_HEIGHT);
+
+        Paint paint = new Paint();
+
+        canvas.drawBitmap(bitmap_background, src, des, paint);
+        canvas.drawBitmap(bitmap_desk, 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480, null);
+
+        canvas.drawBitmap(bitmap_player1, 10 * GameActivity.SCREEN_WIDTH / 800, 326 * GameActivity.SCREEN_HEIGHT / 480, null);
+        canvas.drawBitmap(bitmap_player2, 10 * GameActivity.SCREEN_WIDTH / 800, 25 * GameActivity.SCREEN_HEIGHT / 480, null);
+        canvas.drawBitmap(bitmap_player3, 672 * GameActivity.SCREEN_WIDTH / 800, 5 * GameActivity.SCREEN_HEIGHT / 480, null);
+
         switch (game.status)
         {
             case GetLandlord:
-                drawStart();
+                drawStart(canvas);
                 break;
             case SetLandlord:
-                drawLandlord();
+                drawLandlord(canvas);
                 break;
             case DiscardSelect:
-                drawDiscardSelect();
+                drawDiscardSelect(canvas);
                 break;
             case DiscardSend:
-                drawDiscardSend();
+                drawDiscardSend(canvas);
                 break;
             case Wait:
-                drawDiscardWait();
+                drawDiscardWait(canvas);
                 break;
             default:
                 break;
         }
     }
 
-    private void drawStart() {
-        Rect src = new Rect();
-        Rect des = new Rect();
+    private void drawStart(Canvas canvas) {
+        initPokers(canvas);
 
-        src.set(0, 0, bitmap_background.getWidth(), bitmap_background.getHeight());
-        des.set(0, 0, GameActivity.SCREEN_WIDTH, GameActivity.SCREEN_HEIGHT);
-
-        Canvas canvas = surfaceHolder.lockCanvas();
-        if (canvas != null) {
-            Paint paint = new Paint();
-
-            canvas.drawBitmap(bitmap_background, src, des, paint);
-            canvas.drawBitmap(bitmap_desk, 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            canvas.drawBitmap(bitmap_player1, 10 * GameActivity.SCREEN_WIDTH / 800, 326 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player2, 10 * GameActivity.SCREEN_WIDTH / 800, 25 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player3, 672 * GameActivity.SCREEN_WIDTH / 800, 5 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            initPokers(canvas);
-            draw_card_loard(canvas);
-            draw_button_loard(canvas);
-
-            surfaceHolder.unlockCanvasAndPost(canvas);
-        }
+        draw_card_loard(canvas);
+        draw_button_loard(canvas);
     }
 
-    private void drawLandlord() {
-        Rect src = new Rect();
-        Rect des = new Rect();
+    private void drawLandlord(Canvas canvas) {
+        initPokers(canvas);
 
-        src.set(0, 0, bitmap_background.getWidth(), bitmap_background.getHeight());
-        des.set(0, 0, GameActivity.SCREEN_WIDTH, GameActivity.SCREEN_HEIGHT);
-
-        Canvas canvas = surfaceHolder.lockCanvas();
-        if (canvas != null) {
-            Paint paint = new Paint();
-
-            canvas.drawBitmap(bitmap_background, src, des, paint);
-            canvas.drawBitmap(bitmap_desk, 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            canvas.drawBitmap(bitmap_player1, 10 * GameActivity.SCREEN_WIDTH / 800, 326 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player2, 10 * GameActivity.SCREEN_WIDTH / 800, 25 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player3, 672 * GameActivity.SCREEN_WIDTH / 800, 5 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            initPokers(canvas);
-            draw_card_loard(canvas);
-            draw_button_loard(canvas);
-
-            surfaceHolder.unlockCanvasAndPost(canvas);
-        }
+        draw_card_loard(canvas);
+        draw_button_loard(canvas);
 
         Log.i("=== handlerC ", "drawLandlord send : " + "Set landlord ok");
         BeatHandler.sendMessage(GameActivity.handlerC, "Set landlord ok");
     }
 
-    private void drawDiscardSelect() {
-        Rect src = new Rect();
-        Rect des = new Rect();
+    private void drawDiscardSelect(Canvas canvas) {
+        initPokers(canvas);
 
-        src.set(0, 0, bitmap_background.getWidth(), bitmap_background.getHeight());
-        des.set(0, 0, GameActivity.SCREEN_WIDTH, GameActivity.SCREEN_HEIGHT);
-
-        Canvas canvas = surfaceHolder.lockCanvas();
-        if (canvas != null) {
-            Paint paint = new Paint();
-
-            canvas.drawBitmap(bitmap_background, src, des, paint);
-            canvas.drawBitmap(bitmap_desk, 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            canvas.drawBitmap(bitmap_player1, 10 * GameActivity.SCREEN_WIDTH / 800, 326 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player2, 10 * GameActivity.SCREEN_WIDTH / 800, 25 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player3, 672 * GameActivity.SCREEN_WIDTH / 800, 5 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            initPokers(canvas);
-            draw_card_loard(canvas);
-
-            draw_button_discard(canvas);
-            draw_curr(canvas);
-
-            surfaceHolder.unlockCanvasAndPost(canvas);
-        }
+        draw_card_loard(canvas);
+        draw_button_discard(canvas);
+        draw_curr(canvas);
     }
 
-    private void drawDiscardSend() {
-        Rect src = new Rect();
-        Rect des = new Rect();
+    private void drawDiscardSend(Canvas canvas) {
+        initPokers(canvas);
 
-        src.set(0, 0, bitmap_background.getWidth(), bitmap_background.getHeight());
-        des.set(0, 0, GameActivity.SCREEN_WIDTH, GameActivity.SCREEN_HEIGHT);
+        draw_card_loard(canvas);
+        draw_show_cards(canvas);
+        draw_curr(canvas);
 
-        Canvas canvas = surfaceHolder.lockCanvas();
-        if (canvas != null) {
-            Paint paint = new Paint();
-
-            canvas.drawBitmap(bitmap_background, src, des, paint);
-            canvas.drawBitmap(bitmap_desk, 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            canvas.drawBitmap(bitmap_player1, 10 * GameActivity.SCREEN_WIDTH / 800, 326 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player2, 10 * GameActivity.SCREEN_WIDTH / 800, 25 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player3, 672 * GameActivity.SCREEN_WIDTH / 800, 5 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            ArrayList<SelectCard> selectCards = game.players[0].selectCards;
-            ArrayList<MyHandCard> myHandCards = game.players[0].myHandCards;
-            for (int i = 0; i < selectCards.size(); i++) {
-                for (int j = 0; j < myHandCards.size(); j++) {
-                    if (selectCards.get(i).cardNo == myHandCards.get(j).cardNo) {
-                        myHandCards.remove(j);
-                    }
-                }
-            }
-
-            initPokers(canvas);
-            draw_card_loard(canvas);
-            draw_show_cards(canvas);
-            draw_curr(canvas);
-
-            surfaceHolder.unlockCanvasAndPost(canvas);
-
-            Log.i("=== handlerC ", "drawDiscardSend send : " + "Discard send ok");
-            BeatHandler.sendMessage(GameActivity.handlerC, "Discard send ok");
-        }
+        Log.i("=== handlerC ", "drawDiscardSend send : " + "Discard send ok");
+        BeatHandler.sendMessage(GameActivity.handlerC, "Discard send ok");
     }
 
-    private void drawDiscardWait() {
-        Rect src = new Rect();
-        Rect des = new Rect();
+    private void drawDiscardWait(Canvas canvas) {
+        initPokers(canvas);
 
-        src.set(0, 0, bitmap_background.getWidth(), bitmap_background.getHeight());
-        des.set(0, 0, GameActivity.SCREEN_WIDTH, GameActivity.SCREEN_HEIGHT);
+        draw_card_loard(canvas);
+        draw_show_cards(canvas);
+        draw_curr(canvas);
 
-        Canvas canvas = surfaceHolder.lockCanvas();
-        if (canvas != null) {
-            Paint paint = new Paint();
-
-            canvas.drawBitmap(bitmap_background, src, des, paint);
-            canvas.drawBitmap(bitmap_desk, 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            canvas.drawBitmap(bitmap_player1, 10 * GameActivity.SCREEN_WIDTH / 800, 326 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player2, 10 * GameActivity.SCREEN_WIDTH / 800, 25 * GameActivity.SCREEN_HEIGHT / 480, null);
-            canvas.drawBitmap(bitmap_player3, 672 * GameActivity.SCREEN_WIDTH / 800, 5 * GameActivity.SCREEN_HEIGHT / 480, null);
-
-            initPokers(canvas);
-            draw_card_loard(canvas);
-            draw_show_cards(canvas);
-            draw_curr(canvas);
-
-            surfaceHolder.unlockCanvasAndPost(canvas);
-
-            Log.i("=== handlerC ", "drawDiscardSend send : " + "Discard send ok");
-            BeatHandler.sendMessage(GameActivity.handlerC, "Discard send ok");
-        }
+        Log.i("=== handlerC ", "drawDiscardSend send : " + "Discard send ok");
+        BeatHandler.sendMessage(GameActivity.handlerC, "Discard send ok");
     }
 
     private void draw_curr (Canvas canvas)
@@ -382,8 +298,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     private void initPokers(Canvas canvas) {
         ArrayList<MyHandCard> myHandCards = game.players[0].myHandCards;
 
-        for (MyHandCard myHandCard : myHandCards) {
-            canvas.drawBitmap (bitmaps_cards[myHandCard.cardNo], myHandCard.retx, myHandCard.rety, null);
+        synchronized (myHandCards) {
+            Log.e("GameView", "initPokers start ...");
+
+            for (MyHandCard myHandCard : myHandCards) {
+                canvas.drawBitmap (bitmaps_cards[myHandCard.cardNo], myHandCard.retx, myHandCard.rety, null);
+            }
+
+            Log.e("Game", "initPokers end");
         }
     }
 
@@ -429,28 +351,36 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     }
 
     private void draw_show_cards(Canvas canvas) {
-        ArrayList<SelectCard> selectCards = game.players[0].selectCards;
+        int n = 0;
 
-        if(game.curPlayer == game.players[0])
+        for (int i = 0; i < game.lastPlayer.deskCards.size(); i++)
         {
-            for (int i = 0; i < selectCards.size(); i++)
-            {
-                SelectCard selectCard = selectCards.get(i);
+            DeskCard deskCard = game.lastPlayer.deskCards.get(i);
 
-                DeskCard deskCard = new DeskCard();
-                deskCard.cardNo = selectCard.cardNo;
-                game.deskCards.add(deskCard);
+            if (game.curPlayer == game.players[0]) {
+                canvas.drawBitmap (bitmaps_cards_d[deskCard.cardNo], (300 + 20 * n) * GameActivity.SCREEN_WIDTH / 800, 250 * GameActivity.SCREEN_HEIGHT / 480, null);
+            } else if (game.curPlayer == game.players[1]) {
+                canvas.drawBitmap (bitmaps_cards_d[deskCard.cardNo], (500 + n * 20) * GameActivity.SCREEN_WIDTH / 800, 120 * GameActivity.SCREEN_HEIGHT / 480, null);
+            } else if (game.curPlayer == game.players[1]) {
+                canvas.drawBitmap (bitmaps_cards_d[deskCard.cardNo], (200 + n * 20) * GameActivity.SCREEN_WIDTH / 800, 120 * GameActivity.SCREEN_HEIGHT / 480, null);
             }
 
-            selectCards.clear();
+            n++;
         }
 
-        int n = 0;
-        for (int i = 0; i < game.deskCards.size(); i++)
+        n = 0;
+        for (int i = 0; i < game.curPlayer.deskCards.size(); i++)
         {
-            DeskCard deskCard = game.deskCards.get(i);
+            DeskCard deskCard = game.curPlayer.deskCards.get(i);
 
-            canvas.drawBitmap (bitmaps_cards_d[deskCard.cardNo], (300 + 20 * n) * GameActivity.SCREEN_WIDTH / 800, 250 * GameActivity.SCREEN_HEIGHT / 480, null);
+            if (game.curPlayer == game.players[0]) {
+                canvas.drawBitmap (bitmaps_cards_d[deskCard.cardNo], (300 + 20 * n) * GameActivity.SCREEN_WIDTH / 800, 250 * GameActivity.SCREEN_HEIGHT / 480, null);
+            } else if (game.curPlayer == game.players[1]) {
+                canvas.drawBitmap (bitmaps_cards_d[deskCard.cardNo], (500 + n * 20) * GameActivity.SCREEN_WIDTH / 800, 120 * GameActivity.SCREEN_HEIGHT / 480, null);
+            } else if (game.curPlayer == game.players[2]) {
+                canvas.drawBitmap (bitmaps_cards_d[deskCard.cardNo], (200 + n * 20) * GameActivity.SCREEN_WIDTH / 800, 120 * GameActivity.SCREEN_HEIGHT / 480, null);
+            }
+
             n++;
         }
     }
@@ -565,14 +495,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
                         myHandCard.rety = 350 * GameActivity.SCREEN_HEIGHT / 480;
                         myHandCard.bSelected = false;
 
-                        removeSelectCardsNode(selectCards, myHandCard.cardNo);
+                        game.removeSelectCardsNode(selectCards, myHandCard.cardNo);
                     } else {
                         myHandCard.rety = 330 * GameActivity.SCREEN_HEIGHT / 480;
                         myHandCard.bSelected = true;
 
                         SelectCard selectCard = new SelectCard();
                         selectCard.cardNo = myHandCard.cardNo;
-                        sortAddList(selectCards, selectCard);
+                        game.sortAddList(selectCards, selectCard);
                     }
 
                     bAction = true;
@@ -583,14 +513,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
                         myHandCard.rety = 350 * GameActivity.SCREEN_HEIGHT / 480;
                         myHandCard.bSelected = false;
 
-                        removeSelectCardsNode(selectCards, myHandCard.cardNo);
+                        game.removeSelectCardsNode(selectCards, myHandCard.cardNo);
                     } else {
                         myHandCard.rety = 330 * GameActivity.SCREEN_HEIGHT / 480;
                         myHandCard.bSelected = true;
 
                         SelectCard selectCard = new SelectCard();
                         selectCard.cardNo = myHandCard.cardNo;
-                        sortAddList(selectCards, selectCard);
+                        game.sortAddList(selectCards, selectCard);
                     }
 
                     bAction = true;
@@ -599,34 +529,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         }
 
         return bAction;
-    }
-
-    private void sortAddList(ArrayList<SelectCard> selectCards, SelectCard selectCard) {
-        SelectCard selectCardTmp;
-
-        for (int i = 0; i < selectCards.size(); i++) {
-            selectCardTmp = selectCards.get(i);
-            if (selectCard.cardNo > selectCardTmp.cardNo) {
-                selectCards.add(i, selectCard);
-                return;
-            }
-        }
-
-        selectCards.add(selectCard);
-    }
-
-    private void removeSelectCardsNode(ArrayList<SelectCard> selectCards, int No) {
-        SelectCard selectCard = null;
-
-        for (int i = 0; i < selectCards.size(); i++) {
-            selectCard = selectCards.get(i);
-            if (selectCard.cardNo == No) {
-                selectCards.remove(i);
-                return;
-            }
-        }
-
-        Log.e("GameView", "delListNode not remove one");
     }
 
     @Override
