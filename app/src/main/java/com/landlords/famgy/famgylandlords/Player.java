@@ -11,6 +11,7 @@ public class Player
     ArrayList<MyHandCard> myHandCards;
     ArrayList<SelectCard> selectCards;
     ArrayList<DeskCard> deskCards;
+    int passStatus = 1; // 1：允许pass， 2：已选pass, 3 : 无权pass
 
     Player (int No, Game game)
     {

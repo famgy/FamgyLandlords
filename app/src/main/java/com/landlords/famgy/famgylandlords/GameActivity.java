@@ -33,8 +33,10 @@ public class GameActivity extends AppCompatActivity
                 public void handleMessage(Message msg) {
                     String cmd = (String) msg.obj;
                     Log.i("=== HandlerC ", "received : " + cmd + " , curStatus :" + game.status);
-
-                    gameEngine();
+                    synchronized (game.getGame())
+                    {
+                        gameEngine();
+                    }
                 }
             };
 

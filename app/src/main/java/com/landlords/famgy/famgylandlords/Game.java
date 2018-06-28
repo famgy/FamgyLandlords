@@ -18,11 +18,9 @@ public class Game {
     int callBegin; //当前访问的下标
     Card cardHeap; //发牌堆
     int[] lord_show = new int[3];
-    Boolean my_world = false;  //判断是否是自己任意出牌局；
     Player curPlayer; //当前出牌玩家
     Player lastPlayer; //最后出牌方
     Player landlord; //地主
-
 
     //游戏进度状态
     enum Status
@@ -103,11 +101,7 @@ public class Game {
     void setLandlordProc() {
         status = Status.DiscardSelect;
 
-        //如果是真人玩家
-        if (curPlayer == players[0])
-        {
-            my_world = (curPlayer.getNo () == lastPlayer.getNo ());
-        }
+        curPlayer.passStatus = 3;
 
         Log.i("=== setLandlord ", "setLandlord send : " + "Discard select");
         BeatHandler.sendMessage(GameView.handlerV, "Discard select");
@@ -118,31 +112,38 @@ public class Game {
         boolean cards_fit = false;
         Player player = game.players[0];
 
-        cards_fit = analyseSelectCards();
-        if (cards_fit == true) {
+        if (player.passStatus == 3) {
             status = Status.DiscardSend;
-        }
-
-        for (int i = 0; i < player.selectCards.size(); i++)
-        {
-            SelectCard selectCard = player.selectCards.get(i);
-
-            DeskCard deskCard = new DeskCard();
-            deskCard.cardNo = selectCard.cardNo;
-
-            if (i == 0) {
-                deskCard.type = selectCard.type;
+        } else {
+            cards_fit = analyseSelectCards();
+            if (cards_fit == true) {
+                status = Status.DiscardSend;
+            } else {
+                Log.i("=== discardSelectProc ", "select cards is wrong!");
+                return;
             }
 
-            player.deskCards.add(deskCard);
+            for (int i = 0; i < player.selectCards.size(); i++)
+            {
+                SelectCard selectCard = player.selectCards.get(i);
 
-            removeMyHandCardsNode(player.myHandCards, selectCard.cardNo);
+                DeskCard deskCard = new DeskCard();
+                deskCard.cardNo = selectCard.cardNo;
+
+                if (i == 0) {
+                    deskCard.type = selectCard.type;
+                }
+
+                player.deskCards.add(deskCard);
+
+                removeMyHandCardsNode(player.myHandCards, selectCard.cardNo);
+            }
         }
 
         player.selectCards.clear();
 
-        Log.i("=== discardSelect ", "discard send : " + "Discard send");
-        BeatHandler.sendMessage(GameView.handlerV, "Discard send" + " , curStatus : " + status);
+        Log.i("=== discardSelectProc ", "discard send : " + "Discard send" + " , curStatus : " + status);
+        BeatHandler.sendMessage(GameView.handlerV, "Discard send (discardSelectProc)");
     }
 
     //恢复出牌状态
@@ -151,25 +152,44 @@ public class Game {
         status = Status.Wait;
 
         lastPlayer = curPlayer;
-
         if (lastPlayer == players[0]) {
             curPlayer = players[1];
         } else if (lastPlayer == players[1]) {
             curPlayer = players[2];
+        } else if (lastPlayer == players[2]) {
+            curPlayer = players[0];
+            status = Status.DiscardSelect;
         }
 
-        Log.i("=== discardSend ", "discard wait : " + "Discard wait");
-        BeatHandler.sendMessage(GameView.handlerV, "Discard wait" + " , curStatus : " + status);
+        if (lastPlayer == curPlayer) {
+            curPlayer.passStatus = 3;
+        } else {
+            curPlayer.passStatus = 1;
+        }
+
+        curPlayer.deskCards.clear();
+
+        Log.i("=== discardSendProc ", "discard wait : " + "Discard wait" + " , curStatus : " + status);
+        BeatHandler.sendMessage(GameView.handlerV, "Discard wait (discardSendProc)");
     }
 
     //等待状态转向下一位玩家出牌
     void discardwaitProc ()
     {
+        Log.e("=== discardwaitProc ", "robotDiscard thread");
+
+        if (curPlayer.getNo() == 0) {
+            status = Status.DiscardSelect;
+
+            Log.i("=== discardwaitProc ", "setLandlord send : " + "Discard select");
+            BeatHandler.sendMessage(GameView.handlerV, "Discard select");
+        }
+
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(3000);
 
                     robotDiscard();
 
@@ -180,9 +200,6 @@ public class Game {
         });
 
         thread.start();
-
-//        Log.i("=== discardSend ", "discard wait : " + "Discard wait");
-//        BeatHandler.sendMessage(GameView.handlerV, "Discard wait" + " , curStatus : " + status);
     }
 
     private void robotDiscard()
@@ -198,6 +215,8 @@ public class Game {
 
                     DeskCard deskCard = new DeskCard();
                     deskCard.cardNo = curPlayer.myHandCards.get(i).cardNo;
+                    deskCard.type = Card.Type.Single;
+
                     curPlayer.deskCards.add(deskCard);
 
                     break;
@@ -272,13 +291,11 @@ public class Game {
         for (int i = 0; i < myHandCards.size(); i++) {
             myHandCard = myHandCards.get(i);
             if (myHandCard.cardNo == No) {
-                synchronized (myHandCards) {
-                    Log.e("Game", "removeMyHandCardsNode start ...");
+                Log.e("Game", "removeMyHandCardsNode start ...");
 
-                    myHandCards.remove(i);
+                myHandCards.remove(i);
 
-                    Log.e("Game", "removeMyHandCardsNode end ...");
-                }
+                Log.e("Game", "removeMyHandCardsNode end ...");
 
                 return;
             }
