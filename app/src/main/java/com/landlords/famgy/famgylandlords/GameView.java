@@ -250,6 +250,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     }
 
     private void drawDiscardSelect(Canvas canvas) {
+        if (game.bFitCards == false) {
+            clearSelectCards();
+            draw_not_fit(canvas);
+            game.bFitCards = true;
+        }
+
         initPokers(canvas);
 
         draw_card_loard(canvas);
@@ -363,7 +369,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     private void draw_show_cards(Canvas canvas) {
         int n = 0;
 
-        if (game.players[0].passStatus == 3 && game.status == Game.Status.Wait) {
+        /* 自己出牌不显示 “不出” */
+        if (game.players[0].passStatus == 3 && game.status == Game.Status.Wait)
+        {
             canvas.drawBitmap (bitmap_noDiscard, (300 + 20 * n) * GameActivity.SCREEN_WIDTH / 800, 250 * GameActivity.SCREEN_HEIGHT / 480, null);
         } else {
             for (int i = 0; i < game.players[0].deskCards.size(); i++)
@@ -374,7 +382,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         }
 
         n = 0;
-        if (game.players[1].passStatus == 3 && game.status == Game.Status.Wait) {
+        if ((game.players[1].passStatus == 3 && game.status == Game.Status.Wait) ||
+                (game.players[1].passStatus == 3 && game.status == Game.Status.DiscardSelect))
+        {
             canvas.drawBitmap (bitmap_noDiscard, (500) * GameActivity.SCREEN_WIDTH / 800, 120 * GameActivity.SCREEN_HEIGHT / 480, null);
         } else {
             for (int i = 0; i < game.players[1].deskCards.size(); i++)
@@ -385,7 +395,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         }
 
         n = 0;
-        if (game.players[2].passStatus == 3 && game.status == Game.Status.Wait) {
+        if ((game.players[2].passStatus == 3 && game.status == Game.Status.Wait) ||
+                (game.players[2].passStatus == 3 && game.status == Game.Status.DiscardSelect))
+        {
             canvas.drawBitmap (bitmap_noDiscard, (200) * GameActivity.SCREEN_WIDTH / 800, 120 * GameActivity.SCREEN_HEIGHT / 480, null);
         } else {
             for (int i = 0; i < game.players[2].deskCards.size(); i++)
@@ -394,6 +406,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
                 n++;
             }
         }
+    }
+
+    private void draw_not_fit (Canvas canvas)
+    {
+        //出牌不符合规则时绘制
+        Paint paint = new Paint ();
+        paint.setTextSize (70);
+        String str = "您选的牌不符";
+        canvas.drawText (str, 300 * GameActivity.SCREEN_WIDTH / 800, 200 * GameActivity.SCREEN_HEIGHT / 480, paint);
     }
 
     @Override
@@ -565,6 +586,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         }
 
         return bAction;
+    }
+
+    private void  clearSelectCards() {
+        ArrayList<MyHandCard> myHandCards = game.players[0].myHandCards;
+        ArrayList<SelectCard> selectCards = game.players[0].selectCards;
+        MyHandCard myHandCard = null;
+
+        for (int i = 0; i < myHandCards.size(); i++) {
+            myHandCard = myHandCards.get(i);
+            if (myHandCard.bSelected == true) {
+                myHandCard.rety = 350 * GameActivity.SCREEN_HEIGHT / 480;
+                myHandCard.bSelected = false;
+
+                game.removeSelectCardsNode(selectCards, myHandCard.cardNo);
+            }
+        }
     }
 
     @Override

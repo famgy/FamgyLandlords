@@ -21,6 +21,7 @@ public class Game {
     Player curPlayer; //当前出牌玩家
     Player lastPlayer; //最后出牌方
     Player landlord; //地主
+    boolean bFitCards;
 
     //游戏进度状态
     enum Status
@@ -38,6 +39,7 @@ public class Game {
         status = Status.NotStart;
 
         lord_show[0] = -1;
+        bFitCards = true;
     }
 
     static Game getGame() {
@@ -109,17 +111,20 @@ public class Game {
 
     void discardSelectProc ()
     {
-        boolean cards_fit = false;
         Player player = game.players[0];
 
         if (player.passStatus == 3) {
             status = Status.DiscardSend;
         } else {
-            cards_fit = analyseSelectCards();
-            if (cards_fit == true) {
+            analyseSelectCards();
+            if (bFitCards == true) {
                 status = Status.DiscardSend;
             } else {
                 Log.i("=== discardSelectProc ", "select cards is wrong!");
+
+                Log.i("=== discardSelectProc ", "setLandlord send : " + "select cards is wrong! Discard select again");
+                BeatHandler.sendMessage(GameView.handlerV, "Discard select");
+
                 return;
             }
 
@@ -150,6 +155,7 @@ public class Game {
     void discardSendProc ()
     {
         status = Status.Wait;
+        Player oldPlayer = lastPlayer;
 
         lastPlayer = curPlayer;
         if (lastPlayer == players[0]) {
@@ -161,7 +167,11 @@ public class Game {
             status = Status.DiscardSelect;
         }
 
-        if (lastPlayer == curPlayer) {
+        if (lastPlayer.passStatus == 3) {
+            lastPlayer = oldPlayer;
+        }
+
+        if (lastPlayer == curPlayer && curPlayer == game.players[0]) {
             curPlayer.passStatus = 3;
         } else {
             curPlayer.passStatus = 1;
@@ -191,7 +201,7 @@ public class Game {
                 try {
                     Thread.sleep(3000);
 
-                    robotDiscard();
+                    robotDiscardSelectProc();
 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -202,25 +212,47 @@ public class Game {
         thread.start();
     }
 
-    private void robotDiscard()
+    private void robotDiscardSelectProc()
     {
+        DeskCard deskCard;
+        int i;
         status = Status.DiscardSend;
 
+        /* 没人管， 走一张最小的牌 */
+        if (curPlayer == lastPlayer) {
+            deskCard = new DeskCard();
+            deskCard.cardNo = curPlayer.myHandCards.get(curPlayer.myHandCards.size() - 1).cardNo;
+            deskCard.type = Card.Type.Single;
+
+            curPlayer.deskCards.add(deskCard);
+
+            Log.i("=== robotDiscard ", "discard send : " + "Discard send");
+            BeatHandler.sendMessage(GameView.handlerV, "Discard send" + " , curStatus : " + status);
+
+            return;
+        }
+
+        /* 管牌 */
         if (lastPlayer.deskCards.get(0).type == Card.Type.Single)
         {
-            for (int i = curPlayer.myHandCards.size() - 1; i >= 0; i--) {
-                if (curPlayer.myHandCards.get(i).cardNo / 4 > lastPlayer.deskCards.get(0).cardNo / 4) {
-                    MyHandCard myHandCard = new MyHandCard();
-                    myHandCard.cardNo = curPlayer.myHandCards.get(i).cardNo;
+            ArrayList<MyHandCard> tmpMyHandCarsCpy = new ArrayList<>();
+            tmpMyHandCarsCpy = (ArrayList<MyHandCard>) curPlayer.myHandCards.clone();
 
-                    DeskCard deskCard = new DeskCard();
-                    deskCard.cardNo = curPlayer.myHandCards.get(i).cardNo;
+            for (i = tmpMyHandCarsCpy.size() - 1; i >= 0; i--) {
+                if (tmpMyHandCarsCpy.get(i).cardNo / 4 > lastPlayer.deskCards.get(0).cardNo / 4) {
+                    deskCard = new DeskCard();
+                    deskCard.cardNo = tmpMyHandCarsCpy.get(i).cardNo;
                     deskCard.type = Card.Type.Single;
 
                     curPlayer.deskCards.add(deskCard);
+                    removeMyHandCardsNode(curPlayer.myHandCards, deskCard.cardNo);
 
                     break;
                 }
+            }
+
+            if (i < 0) {
+                curPlayer.passStatus = 3;
             }
         }
 
@@ -228,9 +260,8 @@ public class Game {
         BeatHandler.sendMessage(GameView.handlerV, "Discard send" + " , curStatus : " + status);
     }
 
-    private boolean analyseSelectCards()
+    private void analyseSelectCards()
     {
-        boolean bFitCards = true;
         ArrayList<SelectCard> selectCards = curPlayer.selectCards;
 
         if (selectCards.size() == 0)
@@ -240,6 +271,14 @@ public class Game {
         }
         else if (selectCards.size() == 1)
         {
+
+            if (curPlayer.getNo() != lastPlayer.getNo() &&
+                selectCards.get(0).cardNo / 4 <= lastPlayer.deskCards.get(0).cardNo / 4)
+            {
+                bFitCards = false;
+                return;
+            }
+
             selectCards.get(0).type = Card.Type.Single;
         }
         else if (selectCards.size() == 2)
@@ -254,7 +293,7 @@ public class Game {
             }
         }
 
-        return bFitCards;
+        return;
     }
 
     public void sortAddList(ArrayList<SelectCard> selectCards, SelectCard selectCard) {
