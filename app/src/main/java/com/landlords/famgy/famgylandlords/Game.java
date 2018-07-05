@@ -157,6 +157,12 @@ public class Game {
         status = Status.Wait;
         Player oldPlayer = lastPlayer;
 
+        if (curPlayer.myHandCards.isEmpty()) {
+            status = Status.GameOver;
+            Log.i("=== discardSendProc ", "discard send : " + "Discard gameOver" + " , curStatus : " + status);
+            BeatHandler.sendMessage(GameView.handlerV, "Discard gameOver (discardSendProc)");
+        }
+
         lastPlayer = curPlayer;
         if (lastPlayer == players[0]) {
             curPlayer = players[1];
@@ -199,7 +205,7 @@ public class Game {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(2000);
 
                     robotDiscardSelectProc();
 
@@ -212,10 +218,16 @@ public class Game {
         thread.start();
     }
 
+    //等待状态转向下一位玩家出牌
+    void gameOverProc ()
+    {
+        Log.e("=== gameOverProc ", "game over!");
+    }
+
     private void robotDiscardSelectProc()
     {
         DeskCard deskCard;
-        int i;
+        int i = -1;
         status = Status.DiscardSend;
 
         /* 没人管， 走一张最小的牌 */
@@ -225,6 +237,7 @@ public class Game {
             deskCard.type = Card.Type.Single;
 
             curPlayer.deskCards.add(deskCard);
+            removeMyHandCardsNode(curPlayer.myHandCards, deskCard.cardNo);
 
             Log.i("=== robotDiscard ", "discard send : " + "Discard send");
             BeatHandler.sendMessage(GameView.handlerV, "Discard send" + " , curStatus : " + status);
@@ -233,11 +246,11 @@ public class Game {
         }
 
         /* 管牌 */
+        ArrayList<MyHandCard> tmpMyHandCarsCpy = new ArrayList<>();
+        tmpMyHandCarsCpy = (ArrayList<MyHandCard>) curPlayer.myHandCards.clone();
+
         if (lastPlayer.deskCards.get(0).type == Card.Type.Single)
         {
-            ArrayList<MyHandCard> tmpMyHandCarsCpy = new ArrayList<>();
-            tmpMyHandCarsCpy = (ArrayList<MyHandCard>) curPlayer.myHandCards.clone();
-
             for (i = tmpMyHandCarsCpy.size() - 1; i >= 0; i--) {
                 if (tmpMyHandCarsCpy.get(i).cardNo / 4 > lastPlayer.deskCards.get(0).cardNo / 4) {
                     deskCard = new DeskCard();
@@ -250,10 +263,32 @@ public class Game {
                     break;
                 }
             }
+        }
+        else if (lastPlayer.deskCards.get(0).type == Card.Type.Double)
+        {
+            for (i = tmpMyHandCarsCpy.size() - 1; i >= 0; i--) {
+                if (tmpMyHandCarsCpy.get(i).cardNo / 4 > lastPlayer.deskCards.get(0).cardNo / 4) {
 
-            if (i < 0) {
-                curPlayer.passStatus = 3;
+                    if (i > 0 && tmpMyHandCarsCpy.get(i).cardNo / 4 == tmpMyHandCarsCpy.get(i + 1).cardNo / 4) {
+                        deskCard = new DeskCard();
+                        deskCard.cardNo = tmpMyHandCarsCpy.get(i).cardNo;
+                        deskCard.type = Card.Type.Double;
+                        curPlayer.deskCards.add(deskCard);
+                        removeMyHandCardsNode(curPlayer.myHandCards, deskCard.cardNo);
+
+                        deskCard = new DeskCard();
+                        deskCard.cardNo = tmpMyHandCarsCpy.get(i + 1).cardNo;
+                        curPlayer.deskCards.add(deskCard);
+                        removeMyHandCardsNode(curPlayer.myHandCards, deskCard.cardNo);
+
+                        break;
+                    }
+                }
             }
+        }
+
+        if (i < 0) {
+            curPlayer.passStatus = 3;
         }
 
         Log.i("=== robotDiscard ", "discard send : " + "Discard send");

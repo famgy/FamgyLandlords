@@ -119,6 +119,9 @@ public class GameActivity extends AppCompatActivity
             case Wait:
                 game.discardwaitProc();
                 break;
+            case GameOver:
+                game.gameOverProc();
+                break;
             default:
                 break;
         }

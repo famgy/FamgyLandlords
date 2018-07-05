@@ -78,6 +78,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     private Bitmap bitmap_time;
     private float time_w;
     private float time_h;
+    private Bitmap bitmap_win;
+    private Bitmap bitmap_fail;
+    private float win_w;
+    private float win_h;
+    private Bitmap bitmap_restart;
+    private float restart_w;
+    private float restart_h;
 
     private Context context;
 
@@ -158,6 +165,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         noDiscard_h = 50 * GameActivity.SCREEN_HEIGHT / 480;
         time_w = 50 * GameActivity.SCREEN_WIDTH / 800;
         time_h = 50 * GameActivity.SCREEN_HEIGHT / 480;
+        win_w = 400 * GameActivity.SCREEN_WIDTH / 800;
+        win_h = 350 * GameActivity.SCREEN_HEIGHT / 480;
+        restart_w = 200 * GameActivity.SCREEN_WIDTH / 800;
+        restart_h = 100 * GameActivity.SCREEN_HEIGHT / 480;
 
         bitmap_background = BitmapScala.scalamap(BitmapFactory.decodeResource(resources, R.drawable.place), background_w, background_h);
         bitmap_desk = BitmapScala.scalamap(BitmapFactory.decodeResource (resources, R.drawable.desk), desk_w, desk_h);
@@ -178,7 +189,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         bitmap_pass = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.pass3), discard_w, discard_h);
         bitmap_discard = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.discard1), discard_w, discard_h);
         bitmap_noDiscard = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.nodiscard), noDiscard_w, noDiscard_h);
-        bitmap_time = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.time), 50 * GameActivity.SCREEN_WIDTH / 800, 50 * GameActivity.SCREEN_HEIGHT / 480);
+        bitmap_time = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.time), time_w, time_h);
+        bitmap_win = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.win), win_w, win_h);
+        bitmap_fail = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.failed), win_w, win_h);
+        bitmap_restart = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.restart), restart_w, restart_h);
 
         //初始化卡牌
         bitmaps_cards = new Bitmap[54];
@@ -226,6 +240,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
                 break;
             case Wait:
                 drawDiscardWait(canvas);
+                break;
+            case GameOver:
+                drawGameOver(canvas);
                 break;
             default:
                 break;
@@ -286,6 +303,30 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         BeatHandler.sendMessage(GameActivity.handlerC, "Discard wait ok");
     }
 
+    private void drawGameOver(Canvas canvas) {
+        initPokers(canvas);
+
+        draw_card_loard(canvas);
+        draw_show_cards(canvas);
+        draw_curr(canvas);
+
+        draw_final_view(canvas);
+
+        Log.i("=== handlerC ", "drawDiscardSend send : " + "Discard finish ok");
+        BeatHandler.sendMessage(GameActivity.handlerC, "Discard finish ok");
+    }
+
+    private void draw_final_view (Canvas canvas)
+    {
+        if (game.players[0].myHandCards.isEmpty())
+            canvas.drawBitmap (bitmap_win, 200 * GameActivity.SCREEN_WIDTH / 800, 65 * GameActivity.SCREEN_HEIGHT / 480, null);
+
+        else
+            canvas.drawBitmap (bitmap_fail, 200 * GameActivity.SCREEN_WIDTH / 800, 65 * GameActivity.SCREEN_HEIGHT / 480, null);
+
+        canvas.drawBitmap (bitmap_restart, 300 * GameActivity.SCREEN_WIDTH / 800, 300 * GameActivity.SCREEN_HEIGHT / 480, null);
+    }
+
     private void draw_curr (Canvas canvas)
     {
         //绘制图标给正在打牌玩家
@@ -318,6 +359,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             canvas.drawBitmap (bitmaps_cards[myHandCard.cardNo], myHandCard.retx, myHandCard.rety, null);
         }
 
+        canvas.drawBitmap(bitmap_card_back, 620 * GameActivity.SCREEN_WIDTH / 800, 100 * GameActivity.SCREEN_HEIGHT / 480, null);
+        canvas.drawBitmap(bitmap_card_back, 100 * GameActivity.SCREEN_WIDTH / 800, 100 * GameActivity.SCREEN_HEIGHT / 480, null);
+
+        Paint paint = new Paint ();
+        paint.setTextSize (60);
+        String str1 = String.valueOf (game.players[1].myHandCards.size());
+        String str2 = String.valueOf (game.players[2].myHandCards.size());
+        canvas.drawText (str1, 620 * GameActivity.SCREEN_WIDTH / 800, 130 * GameActivity.SCREEN_HEIGHT / 480, paint);
+        canvas.drawText (str2, 100 * GameActivity.SCREEN_WIDTH / 800, 130 * GameActivity.SCREEN_HEIGHT / 480, paint);
+
         Log.e("Game", "initPokers end" + "curStatus :" + game.status);
     }
 
@@ -332,10 +383,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             canvas.drawBitmap(bitmaps_cards_l[a[1]], 380 * GameActivity.SCREEN_WIDTH / 800, 20 * GameActivity.SCREEN_HEIGHT / 480, null);
             canvas.drawBitmap(bitmaps_cards_l[a[2]], 440 * GameActivity.SCREEN_WIDTH / 800, 20 * GameActivity.SCREEN_HEIGHT / 480, null);
         }
-
-
-        canvas.drawBitmap(bitmap_card_back, 620 * GameActivity.SCREEN_WIDTH / 800, 100 * GameActivity.SCREEN_HEIGHT / 480, null);
-        canvas.drawBitmap(bitmap_card_back, 100 * GameActivity.SCREEN_WIDTH / 800, 100 * GameActivity.SCREEN_HEIGHT / 480, null);
     }
 
     private void draw_button_loard(Canvas canvas) {
