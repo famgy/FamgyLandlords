@@ -351,6 +351,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     }
 
     private void initPokers(Canvas canvas) {
+
         ArrayList<MyHandCard> myHandCards = game.players[0].myHandCards;
 
         Log.e("GameView", "initPokers start ..." + "curStatus :" + game.status);
@@ -489,6 +490,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
     private boolean playViewDown(float retx, float rety) {
         boolean bAction = false;
 
+        /* 非本人为curplayer，不允许点击 */
+        if (game.status != Game.Status.GetLandlord && game.curPlayer != game.players[0]) {
+            return false;
+        }
+
         if (retx > 530 * GameActivity.SCREEN_WIDTH / 800 &&
             retx < 530 * GameActivity.SCREEN_WIDTH / 800 + score_w &&
             rety > 260 * GameActivity.SCREEN_HEIGHT / 480 &&
@@ -499,9 +505,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             bAction = true;
         }
         else if (rety > 330 * GameActivity.SCREEN_HEIGHT / 480 &&
-                rety < 330 * GameActivity.SCREEN_HEIGHT / 480 + card_cur_h)
+                rety < 330 * GameActivity.SCREEN_HEIGHT / 480 + card_cur_h &&
+                game.status == Game.Status.DiscardSelect)
         {
-            /* 选牌 (任何时候都可以选牌) */
             if (clickHandCard(retx, rety) == true)
             {
                 Log.i("=== handlerV ", "playViewDown send : " + "Discard select");
@@ -516,6 +522,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
         {
             //按钮不出
             game.curPlayer.passStatus = 2;
+
+            clearSelectCards();
 
             Log.i("=== handlerV ", "playViewDown send : " + "Discard send down");
             BeatHandler.sendMessage(handlerV, "Discard send down");
@@ -534,7 +542,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
 
             bAction = true;
         }
-
+        else if (retx > 300 * GameActivity.SCREEN_WIDTH / 800 && retx < 300 * GameActivity.SCREEN_WIDTH / 800 + restart_w &&
+                rety > 260 * GameActivity.SCREEN_HEIGHT && rety < 260 * GameActivity.SCREEN_HEIGHT + restart_h &&
+                game.status == Game.Status.GameOver)
+        {
+            Log.i("=== handlerV ", "playViewDown send : " + "restart");
+            BeatHandler.sendMessage(handlerV, "Restart");
+        }
         return bAction;
     }
 
@@ -565,9 +579,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             Log.i("=== handlerC ", "playViewUp send : " + "Discard send up");
             BeatHandler.sendMessage(GameActivity.handlerC, "Discard send down");
         }
-        else if (retx > 410 * GameActivity.SCREEN_WIDTH / 800 && retx < 410 * GameActivity.SCREEN_WIDTH / 800 + discard_w &&
+        else if (retx > 300 * GameActivity.SCREEN_WIDTH / 800 && retx < 410 * GameActivity.SCREEN_WIDTH / 800 + discard_w &&
                 rety > 260 * GameActivity.SCREEN_HEIGHT / 480 && rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + discard_h &&
-                game.status == Game.Status.DiscardSelect)
+                game.status == Game.Status.GameOver)
         {
             /* 出牌 */
             bitmap_discard = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.discard1), discard_w, discard_h);

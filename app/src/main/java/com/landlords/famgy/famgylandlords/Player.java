@@ -20,13 +20,13 @@ public class Player
         this.game = game;
 
         myHandCards = new ArrayList<>();
-        updateMyHandCardsInfo();
+        updateMyHandCardsInfoLandlord();
 
         selectCards = new ArrayList<>();
         deskCards = new ArrayList<>();
     }
 
-    void updateMyHandCardsInfo() {
+    void updateMyHandCardsInfoLandlord() {
         int offset = 0;
         MyHandCard myHandCard;
 
@@ -47,6 +47,19 @@ public class Player
 
                 myHandCards.add(myHandCard);
             }
+        }
+    }
+
+    void updateMyHandCardsShow() {
+
+        MyHandCard myHandCard;
+        int offset = 0;
+
+        for (int i = 0; i < myHandCards.size(); i++) {
+            myHandCard = myHandCards.get(i);
+            myHandCard.retx = (100 + offset * 25) * GameActivity.SCREEN_WIDTH / 800;
+
+            offset++;
         }
     }
 

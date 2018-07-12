@@ -32,7 +32,8 @@ public class Game {
         DiscardSelect, //选牌
         DiscardSend, //出牌
         Wait, //完成一局后等待选择
-        GameOver //游戏结束
+        GameOver, //游戏结束
+        Restart
     }
 
     private Game() {
@@ -87,7 +88,7 @@ public class Game {
         int[] landlordCard = cardHeap.setLandlordCards (landlord.getNo());
         landlord.setHandCard ();
         if (landlord.getNo() == 0) {
-            players[0].updateMyHandCardsInfo();
+            players[0].updateMyHandCardsInfoLandlord();
         }
 
         if (lord_show[0] == -1) {
@@ -128,6 +129,7 @@ public class Game {
                 return;
             }
 
+            /* 出牌后更新手里的牌 */
             for (int i = 0; i < player.selectCards.size(); i++)
             {
                 SelectCard selectCard = player.selectCards.get(i);
@@ -154,6 +156,10 @@ public class Game {
     //恢复出牌状态
     void discardSendProc ()
     {
+        if (curPlayer == players[0]) {
+            players[0].updateMyHandCardsShow();
+        }
+
         status = Status.Wait;
         Player oldPlayer = lastPlayer;
 
