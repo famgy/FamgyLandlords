@@ -167,6 +167,7 @@ public class Game {
             status = Status.GameOver;
             Log.i("=== discardSendProc ", "discard send : " + "Discard gameOver" + " , curStatus : " + status);
             BeatHandler.sendMessage(GameView.handlerV, "Discard gameOver (discardSendProc)");
+            return;
         }
 
         lastPlayer = curPlayer;
@@ -227,7 +228,8 @@ public class Game {
     //等待状态转向下一位玩家出牌
     void gameOverProc ()
     {
-        Log.e("=== gameOverProc ", "game over!");
+        status = Status.Restart;
+        Log.e("=== gameOverProc ", "Game over, ready to restart game!");
     }
 
     private void robotDiscardSelectProc()

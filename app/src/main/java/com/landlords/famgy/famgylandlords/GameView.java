@@ -502,6 +502,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             game.status == Game.Status.GetLandlord)
         {
             /* 叫3分 */
+            bitmap_score31 = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.score32), score_w, score_h);
+            Log.i("=== HandlerC ", "playViewDown send : " + "Call landlord");
+            BeatHandler.sendMessage(handlerV, "Call landlord");
+
             bAction = true;
         }
         else if (rety > 330 * GameActivity.SCREEN_HEIGHT / 480 &&
@@ -542,13 +546,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
 
             bAction = true;
         }
-        else if (retx > 300 * GameActivity.SCREEN_WIDTH / 800 && retx < 300 * GameActivity.SCREEN_WIDTH / 800 + restart_w &&
-                rety > 260 * GameActivity.SCREEN_HEIGHT && rety < 260 * GameActivity.SCREEN_HEIGHT + restart_h &&
-                game.status == Game.Status.GameOver)
+        else if(retx > 300 * GameActivity.SCREEN_WIDTH / 800 && retx < 300 * GameActivity.SCREEN_WIDTH / 800 + restart_w &&
+                rety > 300 * GameActivity.SCREEN_HEIGHT / 480 && rety < 300 * GameActivity.SCREEN_HEIGHT / 480 + restart_h &&
+                game.status == Game.Status.Restart)
         {
-            Log.i("=== handlerV ", "playViewDown send : " + "restart");
-            BeatHandler.sendMessage(handlerV, "Restart");
+            Log.i("=== handlerV ", "playViewDown send : " + "Game restart");
+            BeatHandler.sendMessage(GameActivity.handlerC, "Game restart");
+
+            bAction = true;
         }
+
         return bAction;
     }
 
@@ -562,7 +569,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
                 game.status == Game.Status.GetLandlord)
         {
             /* 叫3分 */
-            bitmap_score31 = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.score32), score_w, score_h);
+            bitmap_score31 = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.score31), score_w, score_h);
 
             Log.i("=== HandlerC ", "playViewUp send : " + "Call landlord ok");
             BeatHandler.sendMessage(GameActivity.handlerC, "Call landlord ok");
@@ -579,9 +586,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Vie
             Log.i("=== handlerC ", "playViewUp send : " + "Discard send up");
             BeatHandler.sendMessage(GameActivity.handlerC, "Discard send down");
         }
-        else if (retx > 300 * GameActivity.SCREEN_WIDTH / 800 && retx < 410 * GameActivity.SCREEN_WIDTH / 800 + discard_w &&
+        else if (retx > 410 * GameActivity.SCREEN_WIDTH / 800 && retx < 410 * GameActivity.SCREEN_WIDTH / 800 + discard_w &&
                 rety > 260 * GameActivity.SCREEN_HEIGHT / 480 && rety < 260 * GameActivity.SCREEN_HEIGHT / 480 + discard_h &&
-                game.status == Game.Status.GameOver)
+                game.status == Game.Status.DiscardSelect)
         {
             /* 出牌 */
             bitmap_discard = BitmapScala.scalamap (BitmapFactory.decodeResource (resources, R.drawable.discard1), discard_w, discard_h);

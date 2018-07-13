@@ -101,6 +101,7 @@ public class GameActivity extends AppCompatActivity
     private void gameEngine() {
         switch (game.status)
         {
+            case Restart:
             case NotStart:
                 game.startGameProc();
                 break;
